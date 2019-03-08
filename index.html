@@ -1,0 +1,25 @@
+<!DOCTYPE html >
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>私密笔记-Web端</title>
+</head>
+<bodu>
+    <script>
+        function check() { 
+  var userAgentInfo=navigator.userAgent; 
+  var Agents =new Array("Android","iPhone","SymbianOS","Windows Phone","iPad","iPod"); 
+  var flag=true; 
+  for(var v=0;v<Agents.length;v++) { 
+     if(userAgentInfo.indexOf(Agents[v])>0) { 
+       flag=false; 
+       break; 
+     } 
+   } 
+   return flag; 
+  }
+    check()==true?window.location.href="pc":window.location.href="mobile";
+    </script>
+    
+</bodu> 
+</html>

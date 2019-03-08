@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<html>
+    
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+        <title>私密笔记-基于AUI和Vue构建</title>
+        <link rel="stylesheet" type="text/css" href="css/aui.css" />
+        <style type="text/css">`
+        #demo {
+            width: 4rem;
+            height: 4rem;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin-left: -2rem;
+            margin-top: -2rem;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            line-height: 4rem;
+            text-align: center;
+            color: #212121;
+            font-size: 1.2rem;
+        }
+        </style>
+    </head>
+    
+    <body>
+        <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <header class="aui-bar aui-bar-nav aui-bar-light" id="header">
+            <div class="aui-title" id="title">{{ title }}</div>
+            <div class="aui-pull-right" v-on:click="newB" id='new'> <i class="aui-iconfont aui-icon-plus aui-btn" style="font-size:12px">新建</i>
+            </div>
+             <div class="aui-pull-left" v-on:click="recover" id='recover'> <i class="aui-iconfont aui-icon-recovery" style="font-size:12px">取回</i>
+            </div>
+        </header>
+        <footer class="aui-bar aui-bar-tab" id="footer">
+            <div class="aui-bar-tab-item aui-active" tapmode> <i class="aui-iconfont aui-icon-home"></i>
+                <div class="aui-bar-tab-label">密码本</div>
+            </div>
+            <div class="aui-bar-tab-item" tapmode>
+                
+                <i class="aui-iconfont aui-icon-my"></i>
+                
+                <div class="aui-bar-tab-label">设置</div>
+            </div>
+        </footer>
+        
+        <div id="content"></div> 
+        <div id="content2" style="display:none"></div>
+        <div id="Mimport" style="display:none"></div>
+        
+        <!--dialog部分-->
+
+        <script type="text/javascript" src="./script/api.js"></script>
+        <script type="text/javascript" src="./script/aui-tab.js"></script>
+        <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="./script/aui-dialog.js" ></script>
+        <script src="../dist/xxtea.min.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" src="script/aui-toast.js" ></script>
+        <script type="text/javascript">
+        var usr="";
+        var pwd=""
+        var state=false;
+        var dialog = new auiDialog();
+        var toast = new auiToast({
+            });
+        $.post("pg1.php",{},function(result){
+           $("#content").html(result); //先得到空的pg1
+        });
+        $.post("pg2.php",{file:""},function(result){
+           $("#content2").html(result); //先得到空的pg2
+        });
+        var vm1 = new Vue({
+            el: "#header",
+            data: {
+                title: "首页",
+            },
+            methods: {
+                newB: function () {
+                    alert("新建笔记");
+                },
+                recover: function(){
+
+                    dialog.alert({
+                        title:"取回密码",
+                        msg:'<div class="aui-list-item-input"><input id="usrname" type="text" placeholder="用户名"></div><div class="aui-list-item-input"><input id="pwd" type="password" placeholder="密码请和导入的密码本中的一样"></div>',
+                        buttons:['取消','确定'],
+                        //input:true
+                    },function(ret){
+                            if(ret.buttonIndex == 2){
+                                 //Step1:打开用密码加密用户名组成的文件名，看是否有文件存在
+                                 var usr=$("#usrname").val();
+                                 var pwd=$("#pwd").val();
+                                 var filename=(XXTEA.encryptToBase64(usr , pwd));
+                                 amsg="";
+                                 $.post("../isExist.php",{filename:filename},function(result){
+                                     amsg+=result;
+                                   // $("#state11").html(result);
+                                    if(result.indexOf("不")!=-1){ //文件不存在就提示
+                                       // $("#state22").html("文件不存在，取回失败，请检查用户名和密码");
+                                       amsg+="文件不存在，取回失败，请检查用户名和密码";
+                                       toast.fail({
+                                        title:amsg,
+                                        duration:2000
+                                        });
+                                        
+                                    }
+                                    else{
+                                        //存在就取回密文，用密码解密
+                                        $.post("pg2.php",{file:filename},function(result){ //将文件名传送到page2，给导出按钮使用
+                                           $("#content2").html(result); //先得到空的pg2
+                                        });
+                                       // $("#state22").html("文件存在，正在取回...");
+                                        amsg+="文件存在，正在取回...";
+                                        $.post("../gotPbook.php",{filename:filename},function(result){
+                                            $//("#state33").html("取回成功 ");
+                                            amsg+="取回成功 ";
+                                            var obj = JSON.parse(result).data; //解析JSON字符串
+                                           //遍历json数组时，这么写p为索引，0,1
+                                            //console.log(vm3);
+                                            for(var i in obj){
+                                              obj[i]["id"]=i;
+                                              obj[i]["title"]=XXTEA.decryptFromBase64(obj[i]["title"],pwd);
+                                              obj[i]["content"]=XXTEA.decryptFromBase64(obj[i]["content"],pwd);
+                                              //console.log(obj[i]);
+                                            }
+                                            vm_lists.$data.items=eval(JSON.stringify(obj));
+                                            toast.success({
+                                            title:amsg,
+                                            duration:2000
+                                            });
+                                            //console.log(JSON.stringify(obj.data));
+                                        });
+                                    }
+                                });
+                                
+                                
+                                
+                            }
+                    })
+                }
+            }
+        })
+
+         apiready = function () {
+            api.parseTapmode();
+        }
+        var tab = new auiTab({
+            element: document.getElementById("footer")
+        }, function (ret) {
+            console.log(ret);
+            $("#recover").show(); //显示取回的按钮
+            switch (ret.index) {
+            case 1:
+                {
+                   // $.post("pg1.php",{file:"htaaa"},function(result){
+                   //     $("#content").html(result);
+                   // });
+                     $("#content").show();
+                     $("#content2").hide();
+                     $("#Mimport").hide();
+                    vm1.$data.title = "首页";
+                    document.getElementById("new").style.visibility = "visible";
+                    break;
+                }
+            case 2:
+                {
+                    // htmlContent="<button>bbb</button>";
+                   // $.post("pg2.php",{file:"aaaa"},function(result){
+                   //     $("#content").html(result);
+                   // });
+                    $("#content2").show();
+                    $("#content").hide();
+                    $("#Mimport").hide();
+                    vm1.$data.title = "设置";
+                    document.getElementById("new").style.visibility = "hidden";
+                    break;
+                }
+             
+            }
+            //document.getElementById("content").innerHTML = htmlContent;
+        });
+        </script>
+    </body>
+
+</html>

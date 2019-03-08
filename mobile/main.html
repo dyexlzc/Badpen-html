@@ -1,0 +1,101 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>项目花销查询</title>
+<link rel="stylesheet" type="text/css" href="./css/aui.css" />
+<script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.8.1/lib/jquery/jquery.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.8.1/js/zui.min.js"></script>
+    <style type="text/css">
+        #demo {
+            width: 4rem;
+            height: 4rem;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin-left: -2rem;
+            margin-top: -2rem;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            line-height: 4rem;
+            text-align: center;
+            color: #212121;
+            font-size: 1.2rem;
+        }
+    </style>
+    
+</head>
+<body>
+    <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<header class="aui-bar aui-bar-nav aui-bar-light" id="header">
+    <div class="aui-title" id="title">{{ title }}</div>
+    <div class="aui-col-xs-3 aui-pull-right" v-on:click="test" id='new'>
+            <i class="aui-iconfont aui-icon-plus aui-btn" style="font-size:12px"  >&nbsp;新建</i>
+     </div>
+</header>
+    <footer class="aui-bar aui-bar-tab" id="footer">
+        <div class="aui-bar-tab-item aui-active" tapmode>
+            <i class="aui-iconfont aui-icon-home"></i>
+            <div class="aui-bar-tab-label">项目</div>
+        </div>
+        <div class="aui-bar-tab-item" tapmode>
+            <div class="aui-dot"></div>
+            <i class="aui-iconfont aui-icon-my"></i>
+            <div class="aui-bar-tab-label">我的</div>
+        </div>
+    </footer>
+<div id="content"></div>
+  
+<script type="text/javascript" src="./script/api.js" ></script>
+<script type="text/javascript" src="./script/aui-tab.js" ></script>
+<script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+    $("#content").load("pg1.html");
+    var vm1=new Vue({
+        el:"#header",
+        data:{
+            title:"首页概览",
+        },
+        methods:{
+            test:function(){
+                alert("aaa");
+            }
+        }
+    })
+
+    apiready = function(){
+        api.parseTapmode();
+    }
+    var tab = new auiTab({
+        element:document.getElementById("footer")
+    },function(ret){
+        console.log(ret);
+        /*if(ret){
+            document.getElementById("content").textContent = ret.index;
+        }*/
+        var htmlContent="";
+        switch(ret.index){
+            case 1:{
+                $("#content").load("pg1.html");
+                vm1.$data.title="首页概览";
+                document.getElementById("new").style.visibility="visible";
+                break;
+            }
+            case 2:{
+               // htmlContent="<button>bbb</button>";
+               $("#content").load("pg2.html");
+                vm1.$data.title="个人中心";
+                document.getElementById("new").style.visibility="hidden";
+                break;
+            }
+        }
+        //document.getElementById("content").innerHTML = htmlContent;
+    });
+</script>
+</body>
+</html>
